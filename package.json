@@ -8,7 +8,7 @@
 		"dev-https": "set HTTPS=true && node server.js",
 		"build": "next build",
 		"start": "set NODE_ENV=production && node server.js",
-		"start-https": "set NODE_ENV=production && set USE_SSL=true && node server.js",
+		"start-https": "NODE_ENV=production USE_SSL=true node server.js",
 		"start-http": "next start",
 		"lint": "next lint"
 	},
