@@ -45,6 +45,8 @@ import {
 	X,
 } from 'lucide-react';
 
+import KeyValueListInput from '@/components/admin/racks/KeyValueListInput';
+
 // Enhanced Zod schema
 const formSchema = z.object({
 	name: z
@@ -64,6 +66,13 @@ const formSchema = z.object({
 	preConfigOptions: z.array(z.string()).default([]),
 	topologyDiagram: z.string().optional(),
 	topologyHtmlMap: z.string().optional(),
+	titleFeature: z.string().optional(),
+	specifications: z
+		.array(z.object({ specName: z.string(), specValue: z.string() }))
+		.default([]),
+	featuresList: z.array(z.string()).default([]),
+	ctaFinalLine: z.string().optional(),
+	tokenCostPerHour: z.coerce.number().min(0).default(0),
 });
 
 export default function AddRackForm() {
@@ -86,6 +95,11 @@ export default function AddRackForm() {
 			preConfigOptions: [],
 			topologyDiagram: '',
 			topologyHtmlMap: '',
+			titleFeature: '',
+			specifications: [],
+			featuresList: [],
+			ctaFinalLine: '',
+			tokenCostPerHour: 0,
 		},
 	});
 
@@ -345,6 +359,104 @@ export default function AddRackForm() {
 									)}
 								/>
 							</div>
+						</CardContent>
+					</Card>
+
+					{/* Marketing Details Card */}
+					<Card>
+						<CardHeader>
+							<CardTitle className='flex items-center gap-2'>
+								<Info className='h-5 w-5' />
+								Marketing Details
+							</CardTitle>
+						</CardHeader>
+						<CardContent className='space-y-6'>
+							<FormField
+								control={form.control}
+								name='titleFeature'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Title Feature</FormLabel>
+										<FormControl>
+											<Input
+												placeholder='e.g., 2 Leafs · 1 Spine · 1 APIC'
+												{...field}
+											/>
+										</FormControl>
+										<FormDescription>
+											A short feature line displayed under the rack title.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='tokenCostPerHour'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Token Cost Per Hour</FormLabel>
+										<FormControl>
+											<Input type='number' {...field} />
+										</FormControl>
+										<FormDescription>
+											The number of tokens required to book this rack for one hour.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='specifications'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Specifications</FormLabel>
+										<FormControl>
+											<KeyValueListInput {...field} />
+										</FormControl>
+										<FormDescription>
+											Add key-value pairs for rack specifications.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='featuresList'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Features List</FormLabel>
+										<FormControl>
+											<DynamicListInput {...field} />
+										</FormControl>
+										<FormDescription>
+											Add a list of included features.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='ctaFinalLine'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>CTA Final Line</FormLabel>
+										<FormControl>
+											<Input
+												placeholder='e.g., Ready to get started?'
+												{...field}
+											/>
+										</FormControl>
+										<FormDescription>
+											The final line of text before the call to action button.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 						</CardContent>
 					</Card>
 
