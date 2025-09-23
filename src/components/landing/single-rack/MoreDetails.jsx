@@ -1,8 +1,8 @@
-const features = [
+const defaultFeatures = [
 	{
 		name: 'Production-grade hardware',
 		description:
-			'Enterprise Nexus leaf-and-spine switches with dedicated APIC controllers—exactly what you’ll find in modern DCs.',
+			"Enterprise Nexus leaf-and-spine switches with dedicated APIC controllers—exactly what you'll find in modern DCs.",
 	},
 	{
 		name: 'Instant self-service booking',
@@ -31,7 +31,14 @@ const features = [
 	},
 ];
 
-export default function MoreDetails() {
+export default function MoreDetails({ rack }) {
+	// Use features from rack or fallback to defaults
+	const features = rack?.featuresList && rack.featuresList.length > 0
+		? rack.featuresList.map((feature, index) => ({
+			name: feature,
+			description: `${feature} - Professional feature included with this rack.`
+		}))
+		: defaultFeatures;
 	return (
 		<div className='bg-white'>
 			<section aria-labelledby='features-heading' className='relative'>
@@ -48,7 +55,7 @@ export default function MoreDetails() {
 						<h2
 							id='features-heading'
 							className='uppercase tracking-wider text-indigo-600 font-semibold mb-2'>
-							Single-Pod Rack
+							{rack?.name || 'Enterprise Rack'}
 						</h2>
 						<p className='mt-4 text-4xl font-bold tracking-tight text-gray-900'>
 							Built for serious lab work
@@ -56,7 +63,7 @@ export default function MoreDetails() {
 						<p className='mt-4 text-gray-500'>
 							Validate configs, rehearse upgrades, or crash-course for the DCACI
 							exam— all on real Cisco&nbsp;ACI hardware without the overhead of
-							a physical lab.
+							a physical lab. {rack?.titleFeature && `Features: ${rack.titleFeature}`}
 						</p>
 
 						<dl className='mt-10 grid grid-cols-1 gap-x-8 gap-y-10 text-sm sm:grid-cols-2'>

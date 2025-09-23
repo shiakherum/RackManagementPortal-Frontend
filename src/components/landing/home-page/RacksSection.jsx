@@ -75,6 +75,7 @@ export default function RackCards() {
 
 		return {
 			id: rack._id,
+			deviceId: rack.deviceId,
 			title: rack.name,
 			tagline: rack.titleFeature || rack.description?.substring(0, 50) + '...',
 			tokens: rack.tokenCostPerHour || 0,
@@ -87,7 +88,7 @@ export default function RackCards() {
 			totalFeatures: allFeatures.length,
 			cta: {
 				primary: 'Book Now',
-				href: `/racks/${rack._id}`
+				href: `/racks/${rack.deviceId}`
 			},
 			ctaFinalLine: rack.ctaFinalLine || 'Ready to get started?'
 		};
@@ -227,7 +228,7 @@ export default function RackCards() {
 									{/* CTA buttons */}
 									<div className='flex gap-3 px-7 py-6 bg-gray-50 rounded-bl-2xl rounded-br-2xl'>
 										<a
-											href={`/racks/${displayRack.id}`}
+											href={`/racks/${displayRack.deviceId}`}
 											className='flex-1 rounded-md bg-white px-3 py-2 text-center text-sm font-semibold text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50'>
 											More Details
 										</a>

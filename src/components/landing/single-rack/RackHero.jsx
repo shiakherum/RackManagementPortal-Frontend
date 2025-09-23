@@ -12,38 +12,8 @@ import {
 	CheckCircleIcon as CheckCircleSolid,
 	ClockIcon as ClockSolid,
 } from '@heroicons/react/24/solid';
+import ReactMarkdown from 'react-markdown';
 import React, { useState } from 'react';
-
-// Mock data - in real app this would come from props/API
-const rackData = {
-	id: 'single',
-	title: 'Single Pod',
-	tagline: '2 Leafs · 1 Spine · 1 APIC',
-	description:
-		'Perfect for CCNP study, foundational ACI labs, and quick proof-of-concepts. This single-pod rack pairs two enterprise Leaf switches with a Spine and full APIC, mirroring a production fabric—L3-Out connectivity included. Spin up tenants, policies, and external BGP/OSPF links exactly as you would in the data center, but without the overhead.',
-	status: 'available', // available, busy, maintenance
-	nextAvailable: null, // or timestamp if busy
-	tokenRate: 225,
-	hardware: {
-		leafs: 2,
-		spines: 1,
-		apics: 1,
-		total: 4,
-	},
-	availableAciVersions: ['5.2(1g)', '6.0(2h)', '6.0(3c)', '6.1(1a)'],
-	location: 'Data Center A, Row 5',
-	lastWiped: '2 hours ago',
-	features: [
-		'L3-Out (OSPF/BGP)',
-		'VPN jump host included',
-		'Console + GUI access',
-		'One-click power cycle',
-		'Multi-version ACI images (5.x & 6.x)',
-		'Clean-wipe reset after each session',
-		'Snapshot & instant revert support',
-		'24×7 self-service booking calendar',
-	],
-};
 
 // Mock booking data for the next 7 days
 const mockBookings = {
@@ -108,10 +78,58 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
-export default function RackHero() {
+export default function RackHero({ rack }) {
+	// Process rack data with fallbacks for static pages
+	const rackData = rack ? {
+		id: rack.deviceId,
+		title: rack.name,
+		tagline: rack.titleFeature || 'Enterprise ACI Rack',
+		description: rack.description || 'Professional ACI rack available for booking.',
+		status: 'available',
+		nextAvailable: null,
+		tokenRate: rack.tokenCostPerHour || 0,
+		hardware: {
+			total: rack.specifications?.length || 0,
+		},
+		availableAciVersions: rack.availableAciVersions?.length > 0 ? rack.availableAciVersions : ['6.0(2h)'],
+		location: 'Data Center',
+		lastWiped: '2 hours ago',
+		features: rack.featuresList?.length > 0 ? rack.featuresList : [
+			'Professional support included',
+			'24/7 availability',
+			'Secure access',
+			'Regular maintenance'
+		],
+	} : {
+		// Fallback data for static pages
+		id: 'single-pod',
+		title: 'Single Pod',
+		tagline: '2 Leafs · 1 Spine · 1 APIC',
+		description: 'Perfect for CCNP study, foundational ACI labs, and quick proof-of-concepts. This single-pod rack pairs two enterprise Leaf switches with a Spine and full APIC, mirroring a production fabric—L3-Out connectivity included.',
+		status: 'available',
+		nextAvailable: null,
+		tokenRate: 25,
+		hardware: {
+			total: 4,
+		},
+		availableAciVersions: ['5.2(1g)', '6.0(2h)', '6.0(3c)', '6.1(1a)'],
+		location: 'Data Center A, Row 5',
+		lastWiped: '2 hours ago',
+		features: [
+			'L3-Out (OSPF/BGP)',
+			'VPN jump host included',
+			'Console + GUI access',
+			'One-click power cycle',
+			'Multi-version ACI images (5.x & 6.x)',
+			'Clean-wipe reset after each session',
+			'Snapshot & instant revert support',
+			'24×7 self-service booking calendar',
+		],
+	};
+
 	const [selectedAciVersion, setSelectedAciVersion] = useState(
-		rackData.availableAciVersions[1]
-	); // Default to 6.0(2h)
+		rackData.availableAciVersions[0]
+	);
 	const [selectedDate, setSelectedDate] = useState(getAvailableDates()[0].date);
 	const [selectedTime, setSelectedTime] = useState(null);
 	const [selectedDuration, setSelectedDuration] = useState(1);
@@ -232,7 +250,7 @@ export default function RackHero() {
 									<a
 										href='#'
 										className='ml-4 text-sm font-medium text-gray-500 hover:text-gray-700'>
-										Single Pod
+										{rackData.title}
 									</a>
 								</div>
 							</li>
@@ -261,20 +279,10 @@ export default function RackHero() {
 								</div>
 							</div>
 
-							{/* Description */}
-							<p className='mt-6 max-w-2xl text-base/7 text-gray-600 mb-5'>
-								{rackData.description}
-							</p>
-							<p className='mt-2 max-w-2xl text-base/7 text-gray-600 mb-8'>
-								You get two production-grade Leaf switches, a Spine, and a fully
-								licensed APIC controller, so you can rehearse tenant
-								segmentation, contracts, and policy-based routing exactly as you
-								would in the data center. Built-in L3-Out connectivity lets you
-								test external integrations (OSPF, BGP, or static) without extra
-								hardware, while full GUI and out-of-band console access mean you
-								can flip between quick demos and deep-dive troubleshooting on
-								the fly.
-							</p>
+							{/* Description with Markdown */}
+							<div className='mt-6 max-w-2xl prose prose-gray prose-sm mb-8'>
+								<ReactMarkdown>{rackData.description}</ReactMarkdown>
+							</div>
 
 							{/* Quick specs - using cleaner card style */}
 							<div className='mb-8'>
@@ -283,32 +291,47 @@ export default function RackHero() {
 								</h3>
 
 								<div>
-									<dl className='grid grid-cols-1 gap-5 sm:grid-cols-3'>
-										<div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm '>
-											<dt className='truncate text-sm font-medium text-gray-500'>
-												Total Hardware
-											</dt>
-											<dd className='mt-1 text-2xl font-semibold tracking-tight text-gray-900'>
-												4 Nodes
-											</dd>
-										</div>
-										<div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm '>
-											<dt className='truncate text-sm font-medium text-gray-500'>
-												Location
-											</dt>
-											<dd className='mt-1 text-2xl font-semibold tracking-tight text-gray-900'>
-												Mum DC A
-											</dd>
-										</div>
-										<div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm'>
-											<dt className='truncate text-sm font-medium text-gray-500'>
-												Total Hardware
-											</dt>
-											<dd className='mt-1 text-2xl font-semibold tracking-tight text-gray-900'>
-												4 Nodes
-											</dd>
-										</div>
-									</dl>
+									{rack?.specifications && rack.specifications.length > 0 ? (
+										<dl className='grid grid-cols-1 gap-5 sm:grid-cols-3'>
+											{rack.specifications.slice(0, 3).map((spec, index) => (
+												<div key={index} className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm'>
+													<dt className='truncate text-sm font-medium text-gray-500'>
+														{spec.specName}
+													</dt>
+													<dd className='mt-1 text-xl font-semibold tracking-tight text-gray-900'>
+														{spec.specValue}
+													</dd>
+												</div>
+											))}
+										</dl>
+									) : (
+										<dl className='grid grid-cols-1 gap-5 sm:grid-cols-3'>
+											<div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm'>
+												<dt className='truncate text-sm font-medium text-gray-500'>
+													Total Hardware
+												</dt>
+												<dd className='mt-1 text-xl font-semibold tracking-tight text-gray-900'>
+													{rackData.hardware.total} Nodes
+												</dd>
+											</div>
+											<div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm'>
+												<dt className='truncate text-sm font-medium text-gray-500'>
+													Location
+												</dt>
+												<dd className='mt-1 text-xl font-semibold tracking-tight text-gray-900'>
+													{rackData.location}
+												</dd>
+											</div>
+											<div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm'>
+												<dt className='truncate text-sm font-medium text-gray-500'>
+													Status
+												</dt>
+												<dd className='mt-1 text-xl font-semibold tracking-tight text-gray-900'>
+													Available
+												</dd>
+											</div>
+										</dl>
+									)}
 								</div>
 							</div>
 

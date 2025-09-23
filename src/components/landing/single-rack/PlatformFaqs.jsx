@@ -48,7 +48,7 @@ const faqs = [
 	},
 ];
 
-export default function PlatformFaqs() {
+export default function PlatformFaqs({ rack }) {
 	return (
 		<div className='bg-gray-100'>
 			<div className='mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8'>
