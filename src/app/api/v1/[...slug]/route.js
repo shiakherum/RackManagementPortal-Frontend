@@ -38,6 +38,8 @@ async function proxyRequest(request, method, slug) {
     const fetchOptions = {
       method: method,
       headers: headers,
+      // Don't follow redirects automatically - we want to pass them through
+      redirect: 'manual',
     };
 
     if (body) {
@@ -50,6 +52,14 @@ async function proxyRequest(request, method, slug) {
     }
 
     const response = await fetch(url, fetchOptions);
+
+    // Handle redirects by passing them through
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (location) {
+        return NextResponse.redirect(location, response.status);
+      }
+    }
 
     let data;
     const contentType = response.headers.get('content-type');
