@@ -12,8 +12,10 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { useStudentAuth } from '@/lib/student-auth';
 
 export default function Header() {
+	const { user, isAuthenticated, logout, loading } = useStudentAuth();
 	return (
 		<Disclosure
 			as='nav'
@@ -82,30 +84,63 @@ export default function Header() {
 					</div>
 
 					{/* ---------------------------------------------------------------- */}
-					{/* Actions (new job, notifications, profile)                        */}
+					{/* Actions (login/profile based on auth state)                      */}
 					{/* ---------------------------------------------------------------- */}
 					<div className='flex items-center'>
-						<div className='shrink-0'>
-							<Link
-								href='/signin'
-								className='relative inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50'>
-								<ArrowRightEndOnRectangleIcon
-									aria-hidden='true'
-									className='-ml-0.5 size-5'
-								/>
-								Login
-							</Link>
-						</div>
+						{loading ? (
+							<div className='animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600'></div>
+						) : isAuthenticated ? (
+							// Authenticated user menu
+							<>
+								<div className='shrink-0'>
+									<Link
+										href='/dashboard'
+										className='relative inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50'>
+										<UserCircleIcon
+											aria-hidden='true'
+											className='-ml-0.5 size-5'
+										/>
+										Dashboard
+									</Link>
+								</div>
 
-						{/* notification bell + profile (desktop) */}
-						<div className='hidden md:ml-4 md:flex md:shrink-0 md:items-center'>
-							<Link
-								href='/signin'
-								className='relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
-								<UserCircleIcon aria-hidden='true' className='-ml-0.5 size-5' />
-								Get Started
-							</Link>
-						</div>
+								<div className='hidden md:ml-4 md:flex md:shrink-0 md:items-center'>
+									<span className='text-sm text-gray-600 mr-3'>
+										Hi, {user?.firstName}!
+									</span>
+									<button
+										onClick={logout}
+										className='relative inline-flex items-center gap-x-1.5 rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'>
+										<ArrowRightEndOnRectangleIcon aria-hidden='true' className='-ml-0.5 size-5' />
+										Logout
+									</button>
+								</div>
+							</>
+						) : (
+							// Not authenticated - show login buttons
+							<>
+								<div className='shrink-0'>
+									<Link
+										href='/signin'
+										className='relative inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50'>
+										<ArrowRightEndOnRectangleIcon
+											aria-hidden='true'
+											className='-ml-0.5 size-5'
+										/>
+										Login
+									</Link>
+								</div>
+
+								<div className='hidden md:ml-4 md:flex md:shrink-0 md:items-center'>
+									<Link
+										href='/signin'
+										className='relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+										<UserCircleIcon aria-hidden='true' className='-ml-0.5 size-5' />
+										Get Started
+									</Link>
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 			</header>
@@ -148,18 +183,40 @@ export default function Header() {
 
 				<div className='border-t border-gray-200 pt-4 pb-3'>
 					<div className='space-y-1'>
-						<DisclosureButton
-							as={Link}
-							href='/signin'
-							className='block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 sm:px-6'>
-							Login
-						</DisclosureButton>
-						<DisclosureButton
-							as={Link}
-							href='/signin'
-							className='block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 sm:px-6'>
-							Get Started
-						</DisclosureButton>
+						{isAuthenticated ? (
+							<>
+								<div className='px-4 py-2 text-base font-medium text-gray-800 sm:px-6'>
+									Hi, {user?.firstName}!
+								</div>
+								<DisclosureButton
+									as={Link}
+									href='/dashboard'
+									className='block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 sm:px-6'>
+									Dashboard
+								</DisclosureButton>
+								<DisclosureButton
+									as='button'
+									onClick={logout}
+									className='block w-full text-left px-4 py-2 text-base font-medium text-red-600 hover:bg-gray-100 hover:text-red-800 sm:px-6'>
+									Logout
+								</DisclosureButton>
+							</>
+						) : (
+							<>
+								<DisclosureButton
+									as={Link}
+									href='/signin'
+									className='block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 sm:px-6'>
+									Login
+								</DisclosureButton>
+								<DisclosureButton
+									as={Link}
+									href='/signin'
+									className='block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 sm:px-6'>
+									Get Started
+								</DisclosureButton>
+							</>
+						)}
 					</div>
 				</div>
 			</DisclosurePanel>
