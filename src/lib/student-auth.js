@@ -42,20 +42,20 @@ export function StudentAuthProvider({ children }) {
 	const login = async (email, password) => {
 		try {
 			const response = await api.post('/auth/login', { email, password });
-			
+
 			if (response.data.success) {
 				const { user: userData, accessToken } = response.data.data;
-				
+
 				// Only allow non-admin users
 				if (userData.role === 'Admin') {
 					throw new Error('Access Denied: This login is for students only. Please use admin login.');
 				}
-				
+
 				// Store token and set user
 				localStorage.setItem('studentAccessToken', accessToken);
 				api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 				setUser(userData);
-				
+
 				return { success: true };
 			} else {
 				throw new Error(response.data.message || 'Login failed');
@@ -64,6 +64,16 @@ export function StudentAuthProvider({ children }) {
 			const message = error.response?.data?.message || error.message || 'Login failed';
 			return { success: false, error: message };
 		}
+	};
+
+	const loginWithGoogle = () => {
+		window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+	};
+
+	const handleGoogleCallback = (token) => {
+		localStorage.setItem('studentAccessToken', token);
+		api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+		checkAuth();
 	};
 
 	const logout = async () => {
@@ -81,6 +91,8 @@ export function StudentAuthProvider({ children }) {
 	const value = {
 		user,
 		login,
+		loginWithGoogle,
+		handleGoogleCallback,
 		logout,
 		loading,
 		isAuthenticated: !!user,

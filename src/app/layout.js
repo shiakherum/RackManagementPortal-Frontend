@@ -39,6 +39,12 @@ export default function RootLayout({ children }) {
             gtag('config', 'G-ZTPVZ6G2XM');
           `}
 				</Script>
+
+				{/* Razorpay */}
+				<Script
+					src='https://checkout.razorpay.com/v1/checkout.js'
+					strategy='afterInteractive'
+				/>
 			</body>
 		</html>
 	);
