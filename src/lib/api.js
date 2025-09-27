@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getSession, signOut } from 'next-auth/react';
 
 const api = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -9,10 +8,13 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-	async (config) => {
-		const session = await getSession();
-		if (session?.accessToken) {
-			config.headers.Authorization = `Bearer ${session.accessToken}`;
+	(config) => {
+		// Check if running in browser (not SSR)
+		if (typeof window !== 'undefined') {
+			const token = localStorage.getItem('studentAccessToken');
+			if (token) {
+				config.headers.Authorization = `Bearer ${token}`;
+			}
 		}
 		return config;
 	},
@@ -21,15 +23,12 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
 	(response) => response,
-	async (error) => {
-		const session = await getSession();
-
-		if (session?.error === 'RefreshAccessTokenError') {
-			console.error('Refresh token is invalid. Forcing sign out.');
-			// The signOut function will redirect to the login page
-			await signOut({ callbackUrl: '/admin/login' });
+	(error) => {
+		// Handle 401 errors by clearing invalid tokens
+		if (error.response?.status === 401 && typeof window !== 'undefined') {
+			localStorage.removeItem('studentAccessToken');
+			delete api.defaults.headers.common['Authorization'];
 		}
-
 		return Promise.reject(error);
 	}
 );

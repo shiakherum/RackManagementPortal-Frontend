@@ -43,10 +43,10 @@ export default function TokenPacks() {
 			});
 
 			if (response.data.success) {
-				const { orderId, amount, currency } = response.data.data;
+				const { orderId, amount, currency, key } = response.data.data;
 
 				const options = {
-					key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+					key: key,
 					amount: amount,
 					currency: currency,
 					name: 'Cisco ACI Rack Rentals',
