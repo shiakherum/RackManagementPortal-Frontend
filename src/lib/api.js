@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 
 const api = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -8,12 +9,20 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-	(config) => {
+	async (config) => {
 		// Check if running in browser (not SSR)
 		if (typeof window !== 'undefined') {
-			const token = localStorage.getItem('studentAccessToken');
-			if (token) {
-				config.headers.Authorization = `Bearer ${token}`;
+			// First try to get Next Auth session (for admin)
+			const session = await getSession();
+			if (session?.accessToken) {
+				config.headers.Authorization = `Bearer ${session.accessToken}`;
+				return config;
+			}
+
+			// Fall back to student authentication token
+			const studentToken = localStorage.getItem('studentAccessToken');
+			if (studentToken) {
+				config.headers.Authorization = `Bearer ${studentToken}`;
 			}
 		}
 		return config;
