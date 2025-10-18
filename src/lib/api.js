@@ -24,9 +24,25 @@ api.interceptors.request.use(
 
 		// Set Content-Type AFTER auth headers, and only if not FormData
 		// When data is FormData, axios will automatically set the correct Content-Type with boundary
-		if (!(config.data instanceof FormData)) {
+		const isFormData = config.data instanceof FormData;
+
+		// Debug logging for upload endpoint
+		if (config.url?.includes('upload')) {
+			console.log('=== API Interceptor Debug ===');
+			console.log('URL:', config.url);
+			console.log('config.data:', config.data);
+			console.log('config.data type:', typeof config.data);
+			console.log('isFormData:', isFormData);
+			console.log('config.data instanceof FormData:', config.data instanceof FormData);
+			if (config.data) {
+				console.log('config.data.constructor:', config.data.constructor?.name);
+			}
+		}
+
+		if (!isFormData) {
 			config.headers['Content-Type'] = 'application/json';
 		}
+		// If it IS FormData, don't set Content-Type at all - let axios handle it
 
 		return config;
 	},

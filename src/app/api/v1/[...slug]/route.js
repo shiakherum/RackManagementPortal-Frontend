@@ -10,18 +10,28 @@ async function proxyRequest(request, method, slug) {
 
     const url = `${BACKEND_URL}/api/v1/${slug.join('/')}${queryString ? `?${queryString}` : ''}`;
 
+    // Check if this is a multipart/form-data request (file upload)
+    const requestContentType = request.headers.get('content-type');
+    const isMultipart = requestContentType && requestContentType.includes('multipart/form-data');
+
     let body = undefined;
+    const headers = {};
+
     if (method !== 'GET' && method !== 'HEAD') {
-      try {
-        body = await request.text();
-      } catch (e) {
-        // No body to parse
+      if (isMultipart) {
+        // For file uploads, pass through the FormData as-is
+        body = await request.formData();
+        // Don't set Content-Type - let fetch set it with boundary
+      } else {
+        // For regular JSON requests
+        try {
+          body = await request.text();
+        } catch (e) {
+          // No body to parse
+        }
+        headers['Content-Type'] = 'application/json';
       }
     }
-
-    const headers = {
-      'Content-Type': 'application/json',
-    };
 
     // Forward Authorization header if present
     const authHeader = request.headers.get('Authorization');

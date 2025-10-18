@@ -132,7 +132,7 @@ export default function AddRackForm() {
 		},
 	});
 
-	const handleImageUpload = async (event) => {
+	const handleImageUpload = (event) => {
 		const file = event.target.files?.[0];
 		if (!file) return;
 
@@ -149,6 +149,12 @@ export default function AddRackForm() {
 			return;
 		}
 
+		// Ensure we're in the browser
+		if (typeof window === 'undefined') {
+			setServerError('Upload must be done from browser.');
+			return;
+		}
+
 		setUploadingImage(true);
 		setServerError('');
 		setUploadSuccess(false);
@@ -156,21 +162,51 @@ export default function AddRackForm() {
 		const formData = new FormData();
 		formData.append('image', file);
 
-		try {
-			const response = await api.post('/upload/topology-diagram', formData);
+		console.log('=== Frontend Upload Debug ===');
+		console.log('typeof window:', typeof window);
+		console.log('File object:', file);
+		console.log('FormData:', formData);
+		console.log('Token:', session?.accessToken);
 
-			// Store the relative URL in the form (for database)
-			const imageUrl = response.data.data.imageUrl;
-			form.setValue('topologyDiagram', imageUrl);
-			setUploadSuccess(true);
-			setTimeout(() => setUploadSuccess(false), 3000);
-		} catch (error) {
-			setServerError(
-				error.response?.data?.message || 'Failed to upload image.'
-			);
-		} finally {
+		// Use XMLHttpRequest to ensure browser-side upload with proper multipart/form-data
+		const xhr = new XMLHttpRequest();
+		const token = session?.accessToken;
+
+		// Use the API URL - the Next.js proxy will now handle multipart correctly
+		const uploadUrl = `${process.env.NEXT_PUBLIC_API_URL}/upload/topology-diagram`;
+		xhr.open('POST', uploadUrl, true);
+		xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+		// Don't set Content-Type - browser will set it automatically with boundary
+
+		xhr.onload = function() {
 			setUploadingImage(false);
-		}
+			if (xhr.status === 200) {
+				try {
+					const response = JSON.parse(xhr.responseText);
+					const imageUrl = response.data.imageUrl;
+					form.setValue('topologyDiagram', imageUrl);
+					setUploadSuccess(true);
+					setTimeout(() => setUploadSuccess(false), 3000);
+				} catch (error) {
+					setServerError('Failed to parse upload response.');
+				}
+			} else {
+				try {
+					const response = JSON.parse(xhr.responseText);
+					setServerError(response.message || 'Failed to upload image.');
+				} catch (error) {
+					setServerError('Failed to upload image.');
+				}
+			}
+		};
+
+		xhr.onerror = function() {
+			setUploadingImage(false);
+			setServerError('Failed to upload image.');
+		};
+
+		console.log('Sending XHR request...');
+		xhr.send(formData);
 	};
 
 	const removeImage = () => {
