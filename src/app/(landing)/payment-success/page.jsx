@@ -18,7 +18,7 @@ function PaymentSuccessContent() {
 	useEffect(() => {
 		// Auto-redirect after 10 seconds
 		const timer = setTimeout(() => {
-			router.push('/dashboard');
+			router.push('/dashboard?refresh=true');
 		}, 10000);
 
 		return () => clearTimeout(timer);
@@ -87,7 +87,7 @@ function PaymentSuccessContent() {
 						{/* Action Buttons */}
 						<div className='flex flex-col sm:flex-row gap-4 pt-4'>
 							<Button
-								onClick={() => router.push('/dashboard')}
+								onClick={() => router.push('/dashboard?refresh=true')}
 								className='flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all'>
 								Go to Dashboard
 								<ArrowRight className='ml-2 w-5 h-5' />
