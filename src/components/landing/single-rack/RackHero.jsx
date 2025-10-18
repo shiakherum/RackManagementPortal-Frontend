@@ -14,6 +14,9 @@ import {
 } from '@heroicons/react/24/solid';
 import ReactMarkdown from 'react-markdown';
 import React, { useState } from 'react';
+import { useStudentAuth } from '@/lib/student-auth';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 // Mock booking data for the next 7 days
 const mockBookings = {
@@ -79,6 +82,10 @@ function classNames(...classes) {
 }
 
 export default function RackHero({ rack }) {
+	const { user, isAuthenticated } = useStudentAuth();
+	const router = useRouter();
+	const [bookingInProgress, setBookingInProgress] = useState(false);
+
 	// Process rack data with fallbacks for static pages
 	const rackData = rack ? {
 		id: rack.deviceId,
@@ -200,7 +207,55 @@ export default function RackHero({ rack }) {
 	const StatusIcon = status.icon;
 	const availableDates = getAvailableDates();
 	const timeSlots = generateTimeSlots();
-	const isLoggedIn = false; // This would come from your auth state
+
+	const handleBooking = async () => {
+		if (!isAuthenticated) {
+			router.push('/signin');
+			return;
+		}
+
+		if (selectedTime === null) {
+			return;
+		}
+
+		// Check if user has enough tokens
+		const totalCost = rackData.tokenRate * selectedDuration;
+		if (user.tokens < totalCost) {
+			alert(`Insufficient tokens. You need ${totalCost} tokens but only have ${user.tokens} tokens.`);
+			return;
+		}
+
+		setBookingInProgress(true);
+		try {
+			const startDateTime = new Date(selectedDate);
+			startDateTime.setHours(selectedTime, 0, 0, 0);
+
+			const endDateTime = new Date(startDateTime);
+			endDateTime.setHours(startDateTime.getHours() + selectedDuration);
+
+			const bookingData = {
+				rackId: rack._id,
+				selectedAciVersion: selectedAciVersion,
+				startTime: startDateTime.toISOString(),
+				endTime: endDateTime.toISOString(),
+				selectedPreConfigs: [],
+			};
+
+			const response = await api.post('/bookings', bookingData);
+
+			if (response.data.success) {
+				alert('Booking created successfully!');
+				router.push('/user/bookings');
+			} else {
+				alert('Failed to create booking. Please try again.');
+			}
+		} catch (error) {
+			console.error('Booking error:', error);
+			alert(error.response?.data?.message || 'Failed to create booking. Please try again.');
+		} finally {
+			setBookingInProgress(false);
+		}
+	};
 
 	return (
 		<div className='bg-gray-100'>
@@ -515,19 +570,27 @@ export default function RackHero({ rack }) {
 										</div>
 									</div>
 
-									{/* Token balance - Login required */}
+									{/* Token balance */}
 									<div className='mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200'>
 										<div className='flex items-center justify-between'>
 											<div className='text-sm font-medium text-gray-900'>
 												Token Balance
 											</div>
-											<div className='text-xs text-indigo-600 hover:text-indigo-500 cursor-pointer'>
-												Login to see balance
+											{isAuthenticated ? (
+												<div className='text-2xl font-bold text-indigo-600'>
+													<span className='opacity-35'>T</span>{user.tokens}
+												</div>
+											) : (
+												<div className='text-xs text-indigo-600 hover:text-indigo-500 cursor-pointer' onClick={() => router.push('/signin')}>
+													Login to see balance
+												</div>
+											)}
+										</div>
+										{!isAuthenticated && (
+											<div className='text-xs text-gray-500 mt-1'>
+												Sign in to view your available tokens and booking capacity
 											</div>
-										</div>
-										<div className='text-xs text-gray-500 mt-1'>
-											Sign in to view your available tokens and booking capacity
-										</div>
+										)}
 									</div>
 
 									{/* Selection summary */}
@@ -557,14 +620,15 @@ export default function RackHero({ rack }) {
 
 									{/* Book button */}
 									<button
-										disabled={!isLoggedIn || selectedTime === null}
+											onClick={handleBooking}
+										disabled={!isAuthenticated || selectedTime === null || bookingInProgress}
 										className={classNames(
 											'w-full rounded-lg px-4 py-3 text-base font-semibold shadow-sm transition-all',
-											!isLoggedIn || selectedTime === null
+											!isAuthenticated || selectedTime === null || bookingInProgress
 												? 'bg-gray-100 text-gray-400 cursor-not-allowed'
 												: 'bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 										)}>
-										{!isLoggedIn
+										{bookingInProgress ? 'Creating Booking...' : !isAuthenticated
 											? 'Login Required to Book'
 											: selectedTime === null
 											? 'Select Time Slot to Book'
@@ -572,9 +636,9 @@ export default function RackHero({ rack }) {
 									</button>
 
 									{/* Login prompt */}
-									{!isLoggedIn && (
+									{!isAuthenticated && (
 										<div className='mt-4 text-center'>
-											<button className='text-sm cursor-pointer text-indigo-600 hover:text-indigo-500 font-medium'>
+											<button onClick={() => router.push('/signin')} className='text-sm cursor-pointer text-indigo-600 hover:text-indigo-500 font-medium'>
 												Sign in to your account
 											</button>
 										</div>
