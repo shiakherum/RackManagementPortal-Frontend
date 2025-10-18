@@ -3,9 +3,6 @@ import { getSession } from 'next-auth/react';
 
 const api = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_URL,
-	headers: {
-		'Content-Type': 'application/json',
-	},
 });
 
 api.interceptors.request.use(
@@ -16,15 +13,21 @@ api.interceptors.request.use(
 			const session = await getSession();
 			if (session?.accessToken) {
 				config.headers.Authorization = `Bearer ${session.accessToken}`;
-				return config;
-			}
-
-			// Fall back to student authentication token
-			const studentToken = localStorage.getItem('studentAccessToken');
-			if (studentToken) {
-				config.headers.Authorization = `Bearer ${studentToken}`;
+			} else {
+				// Fall back to student authentication token
+				const studentToken = localStorage.getItem('studentAccessToken');
+				if (studentToken) {
+					config.headers.Authorization = `Bearer ${studentToken}`;
+				}
 			}
 		}
+
+		// Set Content-Type AFTER auth headers, and only if not FormData
+		// When data is FormData, axios will automatically set the correct Content-Type with boundary
+		if (!(config.data instanceof FormData)) {
+			config.headers['Content-Type'] = 'application/json';
+		}
+
 		return config;
 	},
 	(error) => Promise.reject(error)

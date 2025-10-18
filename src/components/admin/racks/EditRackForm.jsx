@@ -120,7 +120,7 @@ export default function EditRackForm({ rackId }) {
 	const getImageDisplayUrl = (imageUrl) => {
 		if (!imageUrl) return '';
 		if (imageUrl.startsWith('http')) return imageUrl;
-		return `${process.env.NEXT_PUBLIC_API_STATIC_URL || 'http://localhost:5050'}${imageUrl}`;
+		return `${process.env.NEXT_PUBLIC_API_STATIC_URL || 'https://localhost:5443'}${imageUrl}`;
 	};
 
 	const updateRackMutation = useMutation({
@@ -169,12 +169,7 @@ export default function EditRackForm({ rackId }) {
 		formData.append('image', file);
 
 		try {
-			const response = await api.post('/upload/topology-diagram', formData, {
-				headers: {
-					'Content-Type': 'multipart/form-data',
-					Authorization: `Bearer ${session.accessToken}`,
-				},
-			});
+			const response = await api.post('/upload/topology-diagram', formData);
 
 			const imageUrl = response.data.data.imageUrl;
 			form.setValue('topologyDiagram', imageUrl);

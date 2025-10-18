@@ -111,7 +111,7 @@ export default function AddRackForm() {
 		if (imageUrl.startsWith('http')) return imageUrl;
 		// Use NEXT_PUBLIC_API_STATIC_URL for static files, not the API URL
 		return `${
-			process.env.NEXT_PUBLIC_API_STATIC_URL || 'http://localhost:5050'
+			process.env.NEXT_PUBLIC_API_STATIC_URL || 'https://localhost:5443'
 		}${imageUrl}`;
 	};
 
@@ -157,12 +157,7 @@ export default function AddRackForm() {
 		formData.append('image', file);
 
 		try {
-			const response = await api.post('/upload/topology-diagram', formData, {
-				headers: {
-					'Content-Type': 'multipart/form-data',
-					Authorization: `Bearer ${session.accessToken}`,
-				},
-			});
+			const response = await api.post('/upload/topology-diagram', formData);
 
 			// Store the relative URL in the form (for database)
 			const imageUrl = response.data.data.imageUrl;
