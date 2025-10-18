@@ -8,7 +8,7 @@ import { StudentDashboard } from '@/components/student/dashboard/student-dashboa
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function UserDashboardPage() {
-	const { user, loading, isAuthenticated } = useStudentAuth();
+	const { user, loading, isAuthenticated, refreshUser } = useStudentAuth();
 	const router = useRouter();
 
 	useEffect(() => {
@@ -16,6 +16,14 @@ export default function UserDashboardPage() {
 			router.push('/user/login');
 		}
 	}, [loading, isAuthenticated, router]);
+
+	// Refresh user data when component mounts (to get updated token balance)
+	useEffect(() => {
+		if (isAuthenticated && refreshUser) {
+			refreshUser();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	if (loading) {
 		return (

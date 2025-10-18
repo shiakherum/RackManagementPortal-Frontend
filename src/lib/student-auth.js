@@ -88,12 +88,30 @@ export function StudentAuthProvider({ children }) {
 		}
 	};
 
+	const refreshUser = async () => {
+		try {
+			const token = localStorage.getItem('studentAccessToken');
+			if (token) {
+				api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+				const response = await api.get('/auth/me');
+				if (response.data.success) {
+					setUser(response.data.data);
+					return response.data.data;
+				}
+			}
+		} catch (error) {
+			console.error('Failed to refresh user data:', error);
+		}
+		return null;
+	};
+
 	const value = {
 		user,
 		login,
 		loginWithGoogle,
 		handleGoogleCallback,
 		logout,
+		refreshUser,
 		loading,
 		isAuthenticated: !!user,
 	};

@@ -62,8 +62,13 @@ export default function TokenPacks() {
 							});
 
 							if (verifyResponse.data.success) {
-								alert('Payment successful! Tokens have been added to your account.');
-								router.push('/dashboard');
+								// Redirect to success page with payment details
+								const params = new URLSearchParams({
+									tokens: tokenPack.tokensGranted.toString(),
+									package: tokenPack.name,
+									amount: amount.toString(),
+								});
+								router.push(`/payment-success?${params.toString()}`);
 							} else {
 								alert('Payment verification failed. Please contact support.');
 							}
