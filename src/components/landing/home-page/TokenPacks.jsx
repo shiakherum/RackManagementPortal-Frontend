@@ -52,9 +52,25 @@ export default function TokenPacks() {
 					name: 'Cisco ACI Rack Rentals',
 					description: `${tokenPack.name} - ${tokenPack.tokensGranted} tokens`,
 					order_id: orderId,
-					handler: function (response) {
-						alert('Payment successful! Tokens have been added to your account.');
-						router.push('/dashboard');
+					handler: async function (response) {
+						try {
+							// Verify payment with backend
+							const verifyResponse = await api.post('/orders/verify', {
+								razorpayOrderId: response.razorpay_order_id,
+								razorpayPaymentId: response.razorpay_payment_id,
+								razorpaySignature: response.razorpay_signature,
+							});
+
+							if (verifyResponse.data.success) {
+								alert('Payment successful! Tokens have been added to your account.');
+								router.push('/dashboard');
+							} else {
+								alert('Payment verification failed. Please contact support.');
+							}
+						} catch (error) {
+							console.error('Error verifying payment:', error);
+							alert('Error verifying payment. Please contact support with your payment ID: ' + response.razorpay_payment_id);
+						}
 					},
 					prefill: {
 						name: 'User',
