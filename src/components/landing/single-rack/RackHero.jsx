@@ -13,31 +13,10 @@ import {
 	ClockIcon as ClockSolid,
 } from '@heroicons/react/24/solid';
 import ReactMarkdown from 'react-markdown';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStudentAuth } from '@/lib/student-auth';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-
-// Mock booking data for the next 7 days
-const mockBookings = {
-	'2025-07-12': [
-		{ startHour: 9, duration: 2, user: 'john.doe' },
-		{ startHour: 14, duration: 3, user: 'jane.smith' },
-		{ startHour: 18, duration: 1, user: 'bob.wilson' },
-	],
-	'2025-07-13': [
-		{ startHour: 10, duration: 4, user: 'alice.brown' },
-		{ startHour: 16, duration: 2, user: 'charlie.davis' },
-	],
-	'2025-07-14': [{ startHour: 8, duration: 8, user: 'diana.martinez' }],
-	'2025-07-15': [
-		{ startHour: 13, duration: 2, user: 'eve.taylor' },
-		{ startHour: 20, duration: 3, user: 'frank.miller' },
-	],
-	'2025-07-16': [],
-	'2025-07-17': [{ startHour: 11, duration: 5, user: 'grace.johnson' }],
-	'2025-07-18': [{ startHour: 15, duration: 2, user: 'henry.wilson' }],
-};
 
 // Get available dates (next 7 days)
 const getAvailableDates = () => {
@@ -85,6 +64,7 @@ export default function RackHero({ rack }) {
 	const { user, isAuthenticated } = useStudentAuth();
 	const router = useRouter();
 	const [bookingInProgress, setBookingInProgress] = useState(false);
+	const [rackBookings, setRackBookings] = useState([]);
 
 	// Process rack data with fallbacks for static pages
 	const rackData = rack ? {
@@ -141,6 +121,36 @@ export default function RackHero({ rack }) {
 	const [selectedTime, setSelectedTime] = useState(null);
 	const [selectedDuration, setSelectedDuration] = useState(1);
 
+	// Fetch rack availability when component mounts or when selected date changes
+	useEffect(() => {
+		if (rack?._id) {
+			fetchRackAvailability();
+		}
+	}, [rack?._id, selectedDate]);
+
+	const fetchRackAvailability = async () => {
+		try {
+			// Get the date range for the next 7 days
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const endDate = new Date(today);
+			endDate.setDate(today.getDate() + 7);
+			endDate.setHours(23, 59, 59, 999);
+
+			const response = await api.get(`/bookings/availability/${rack._id}`, {
+				params: {
+					start: today.toISOString(),
+					end: endDate.toISOString()
+				}
+			});
+			if (response.data.success) {
+				setRackBookings(response.data.data || []);
+			}
+		} catch (error) {
+			console.error('Error fetching rack availability:', error);
+		}
+	};
+
 	const getStatusDisplay = () => {
 		switch (rackData.status) {
 			case 'available':
@@ -179,26 +189,38 @@ export default function RackHero({ rack }) {
 	};
 
 	const isTimeSlotBooked = (hour) => {
-		const bookings = mockBookings[selectedDate] || [];
-		return bookings.some((booking) => {
-			return (
-				hour >= booking.startHour && hour < booking.startHour + booking.duration
-			);
+		// Filter bookings for the selected date
+		const selectedDateStart = new Date(selectedDate);
+		selectedDateStart.setHours(0, 0, 0, 0);
+		const selectedDateEnd = new Date(selectedDate);
+		selectedDateEnd.setHours(23, 59, 59, 999);
+
+		return rackBookings.some((booking) => {
+			const bookingStart = new Date(booking.startTime);
+			const bookingEnd = new Date(booking.endTime);
+
+			// Check if booking overlaps with the selected date
+			if (bookingStart > selectedDateEnd || bookingEnd < selectedDateStart) {
+				return false;
+			}
+
+			// Get the hour range for this booking on the selected date
+			const startHourOnDate = bookingStart.getDate() === selectedDateStart.getDate()
+				? bookingStart.getHours()
+				: 0;
+			const endHourOnDate = bookingEnd.getDate() === selectedDateStart.getDate()
+				? bookingEnd.getHours()
+				: 24;
+
+			return hour >= startHourOnDate && hour < endHourOnDate;
 		});
 	};
 
 	const canBookDuration = (startHour, duration) => {
-		const bookings = mockBookings[selectedDate] || [];
 		for (let i = 0; i < duration; i++) {
 			const checkHour = startHour + i;
 			if (checkHour >= 24) return false; // Can't book past midnight
-			const hasConflict = bookings.some((booking) => {
-				return (
-					checkHour >= booking.startHour &&
-					checkHour < booking.startHour + booking.duration
-				);
-			});
-			if (hasConflict) return false;
+			if (isTimeSlotBooked(checkHour)) return false;
 		}
 		return true;
 	};
@@ -245,7 +267,7 @@ export default function RackHero({ rack }) {
 
 			if (response.data.success) {
 				alert('Booking created successfully!');
-				router.push('/user/bookings');
+				router.push('/dashboard');
 			} else {
 				alert('Failed to create booking. Please try again.');
 			}
