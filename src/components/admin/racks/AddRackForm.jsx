@@ -73,6 +73,11 @@ const formSchema = z.object({
 	featuresList: z.array(z.string()).default([]),
 	ctaFinalLine: z.string().optional(),
 	tokenCostPerHour: z.coerce.number().min(0).default(0),
+	vncConnection: z.object({
+		host: z.string().optional(),
+		port: z.coerce.number().optional(),
+		password: z.string().optional(),
+	}).optional(),
 });
 
 export default function AddRackForm() {
@@ -100,6 +105,11 @@ export default function AddRackForm() {
 			featuresList: [],
 			ctaFinalLine: '',
 			tokenCostPerHour: 0,
+			vncConnection: {
+				host: '',
+				port: undefined,
+				password: '',
+			},
 		},
 	});
 
@@ -432,6 +442,63 @@ export default function AddRackForm() {
 										</FormControl>
 										<FormDescription>
 											The number of tokens required to book this rack for one hour.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</CardContent>
+					</Card>
+
+					{/* VNC Connection Settings */}
+					<Card>
+						<CardHeader>
+							<CardTitle>VNC Connection Settings</CardTitle>
+						</CardHeader>
+						<CardContent className='space-y-4'>
+							<FormField
+								control={form.control}
+								name='vncConnection.host'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>VNC Host/IP</FormLabel>
+										<FormControl>
+											<Input placeholder='e.g., 122.179.154.82' {...field} />
+										</FormControl>
+										<FormDescription>
+											The IP address or hostname for VNC access to this rack.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='vncConnection.port'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>VNC Port</FormLabel>
+										<FormControl>
+											<Input type='number' placeholder='e.g., 2000' {...field} />
+										</FormControl>
+										<FormDescription>
+											The port number for VNC access to this rack.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='vncConnection.password'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>VNC Password</FormLabel>
+										<FormControl>
+											<Input type='password' placeholder='VNC password' {...field} />
+										</FormControl>
+										<FormDescription>
+											The password required for VNC access to this rack.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
