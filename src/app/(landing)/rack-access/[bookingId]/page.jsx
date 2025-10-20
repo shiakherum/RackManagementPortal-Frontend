@@ -201,26 +201,28 @@ export default function RackAccessPage({ params }) {
 							Rack Topology Diagram
 						</h3>
 						<div className="relative">
-							<img
-								src={`${process.env.NEXT_PUBLIC_API_STATIC_URL || 'https://localhost:5443'}${
-									booking.rack.topologyDiagram
-								}`}
-								alt="Topology Diagram"
-								useMap="#topology-map"
-								className={`max-w-full h-auto ${
-									booking?.vncAccess?.isActive
-										? 'cursor-pointer'
-										: 'opacity-50 cursor-not-allowed'
-								}`}
-							/>
-							{booking?.rack?.topologyHtmlMap && booking?.vncAccess?.isActive && (
+							{booking?.vncAccess?.isActive && booking?.vncAccess?.novncUrl ? (
 								<div
-									dangerouslySetInnerHTML={{
-										__html: booking.rack.topologyHtmlMap.replace(
-											/href="[^"]*"/g,
-											`onclick="window.parent.postMessage({type:'openVNC', bookingId:'${bookingId}'}, '*'); return false;" href="#"`
-										),
+									onClick={() => {
+										window.open(`/vnc-viewer?bookingId=${bookingId}`, '_blank', 'noopener,noreferrer');
 									}}
+									className="block cursor-pointer"
+								>
+									<img
+										src={`${process.env.NEXT_PUBLIC_API_STATIC_URL || 'https://localhost:5443'}${
+											booking.rack.topologyDiagram
+										}`}
+										alt="Topology Diagram"
+										className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+									/>
+								</div>
+							) : (
+								<img
+									src={`${process.env.NEXT_PUBLIC_API_STATIC_URL || 'https://localhost:5443'}${
+										booking.rack.topologyDiagram
+									}`}
+									alt="Topology Diagram"
+									className="max-w-full h-auto opacity-50 cursor-not-allowed"
 								/>
 							)}
 						</div>
@@ -232,21 +234,6 @@ export default function RackAccessPage({ params }) {
 					</div>
 				)}
 			</div>
-
-			{/* Listen for postMessage from topology map clicks */}
-			{booking?.vncAccess?.isActive && (
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `
-							window.addEventListener('message', function(event) {
-								if (event.data.type === 'openVNC') {
-									window.location.href = '/vnc-viewer?session=' + Date.now() + '&booking=' + event.data.bookingId;
-								}
-							});
-						`,
-					}}
-				/>
-			)}
 		</div>
 	);
 }

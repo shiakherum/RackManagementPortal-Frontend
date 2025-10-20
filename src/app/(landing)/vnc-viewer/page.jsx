@@ -9,7 +9,7 @@ function VNCViewerContent() {
 	const { isAuthenticated, loading: authLoading } = useStudentAuth();
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const bookingId = searchParams.get('booking');
+	const bookingId = searchParams.get('bookingId');
 	const sessionId = searchParams.get('session');
 
 	const [vncUrl, setVncUrl] = useState('');
