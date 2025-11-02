@@ -4,6 +4,7 @@ import {
 	BookCopy,
 	ChevronRight,
 	Home,
+	MessageSquare,
 	MoreHorizontal,
 	Package,
 	Server,
@@ -111,6 +112,11 @@ const navMain = [
 				url: '/admin/bookings/add',
 			},
 		],
+	},
+	{
+		title: 'Feedbacks',
+		url: '/admin/feedbacks',
+		icon: MessageSquare,
 	},
 ];
 

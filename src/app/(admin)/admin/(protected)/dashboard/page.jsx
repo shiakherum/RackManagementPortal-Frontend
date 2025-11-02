@@ -72,13 +72,19 @@ export default function DashboardPage() {
 	}
 
 	if (isError || !stats) {
+		// Check if it's a 401 error (will be handled by interceptor)
+		const is401 = error?.response?.status === 401;
+
 		return (
 			<div className='flex flex-1 flex-col gap-4'>
 				<Alert variant='destructive'>
 					<AlertCircle className='h-4 w-4' />
-					<AlertTitle>Error Loading Dashboard</AlertTitle>
+					<AlertTitle>{is401 ? 'Session Expired' : 'Error Loading Dashboard'}</AlertTitle>
 					<AlertDescription>
-						{error?.message || 'Unable to load dashboard data. Please try refreshing the page or contact support if the problem persists.'}
+						{is401
+							? 'Your session has expired. Redirecting to login...'
+							: (error?.message || 'Unable to load dashboard data. Please try refreshing the page or contact support if the problem persists.')
+						}
 					</AlertDescription>
 				</Alert>
 			</div>

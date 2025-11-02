@@ -1,11 +1,13 @@
 'use client';
 
-import adminApi from '@/lib/admin-api';
+import api from '@/lib/api';
 import { StarIcon } from '@heroicons/react/24/solid';
+import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function FeedbackDetailPage() {
+	const { data: session } = useSession();
 	const router = useRouter();
 	const params = useParams();
 	const { feedbackId } = params;
@@ -14,19 +16,25 @@ export default function FeedbackDetailPage() {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		if (feedbackId) {
+		if (feedbackId && session?.accessToken) {
 			fetchFeedback();
 		}
-	}, [feedbackId]);
+	}, [feedbackId, session?.accessToken]);
 
 	const fetchFeedback = async () => {
+		if (!session?.accessToken) return;
+
 		try {
 			setLoading(true);
-			const response = await adminApi.get(`/feedbacks/${feedbackId}`);
+			const response = await api.get(`/feedbacks/admin/${feedbackId}`, {
+				headers: { Authorization: `Bearer ${session.accessToken}` },
+			});
 			setFeedback(response.data.data);
 		} catch (error) {
 			console.error('Error fetching feedback:', error);
-			alert('Failed to load feedback details');
+			if (error.response?.status !== 401) {
+				alert('Failed to load feedback details');
+			}
 			router.push('/admin/feedbacks');
 		} finally {
 			setLoading(false);

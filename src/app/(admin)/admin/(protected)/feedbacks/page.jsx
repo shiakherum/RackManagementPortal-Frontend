@@ -1,11 +1,13 @@
 'use client';
 
-import adminApi from '@/lib/admin-api';
+import api from '@/lib/api';
 import { StarIcon } from '@heroicons/react/24/solid';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function FeedbacksPage() {
+	const { data: session } = useSession();
 	const router = useRouter();
 	const [feedbacks, setFeedbacks] = useState([]);
 	const [stats, setStats] = useState(null);
@@ -14,27 +16,39 @@ export default function FeedbacksPage() {
 	const [pagination, setPagination] = useState(null);
 
 	useEffect(() => {
-		fetchFeedbacks();
-		fetchStats();
-	}, [page]);
+		if (session?.accessToken) {
+			fetchFeedbacks();
+			fetchStats();
+		}
+	}, [page, session?.accessToken]);
 
 	const fetchFeedbacks = async () => {
+		if (!session?.accessToken) return;
+
 		try {
 			setLoading(true);
-			const response = await adminApi.get(`/feedbacks?page=${page}&limit=20`);
+			const response = await api.get(`/feedbacks/admin?page=${page}&limit=20`, {
+				headers: { Authorization: `Bearer ${session.accessToken}` },
+			});
 			setFeedbacks(response.data.data);
 			setPagination(response.data.pagination);
 		} catch (error) {
 			console.error('Error fetching feedbacks:', error);
-			alert('Failed to load feedbacks');
+			if (error.response?.status !== 401) {
+				alert('Failed to load feedbacks');
+			}
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	const fetchStats = async () => {
+		if (!session?.accessToken) return;
+
 		try {
-			const response = await adminApi.get('/feedbacks/stats');
+			const response = await api.get('/feedbacks/admin/stats', {
+				headers: { Authorization: `Bearer ${session.accessToken}` },
+			});
 			setStats(response.data.data);
 		} catch (error) {
 			console.error('Error fetching stats:', error);
