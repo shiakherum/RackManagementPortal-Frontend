@@ -35,25 +35,31 @@ const getAvailableDates = () => {
 	return dates;
 };
 
-// Generate hourly time slots
-const generateTimeSlots = () => {
-	const slots = [];
-	for (let hour = 0; hour < 24; hour++) {
-		const time12 =
-			hour === 0
-				? '12 AM'
-				: hour < 12
-				? `${hour} AM`
-				: hour === 12
-				? '12 PM'
-				: `${hour - 12} PM`;
-		slots.push({
-			hour,
-			time24: `${hour.toString().padStart(2, '0')}:00`,
-			time12,
-		});
-	}
-	return slots;
+// Get user's timezone
+const getUserTimezone = () => {
+	return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
+// Format time for display with timezone
+const formatTimeWithTimezone = (date) => {
+	return date.toLocaleString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		hour: 'numeric',
+		minute: '2-digit',
+		timeZoneName: 'short',
+	});
+};
+
+// Get current time rounded to next 5 minutes
+const getRoundedCurrentTime = () => {
+	const now = new Date();
+	const minutes = now.getMinutes();
+	const roundedMinutes = Math.ceil(minutes / 5) * 5;
+	now.setMinutes(roundedMinutes);
+	now.setSeconds(0);
+	now.setMilliseconds(0);
+	return now;
 };
 
 function classNames(...classes) {
@@ -117,16 +123,23 @@ export default function RackHero({ rack }) {
 	const [selectedAciVersion, setSelectedAciVersion] = useState(
 		rackData.availableAciVersions[0]
 	);
-	const [selectedDate, setSelectedDate] = useState(getAvailableDates()[0].date);
-	const [selectedTime, setSelectedTime] = useState(null);
+	const [selectedStartTime, setSelectedStartTime] = useState('');
 	const [selectedDuration, setSelectedDuration] = useState(1);
+	const [userTimezone] = useState(getUserTimezone());
 
-	// Fetch rack availability when component mounts or when selected date changes
+	// Initialize with current time rounded to next 5 minutes
+	useEffect(() => {
+		const roundedTime = getRoundedCurrentTime();
+		const localDatetimeString = roundedTime.toISOString().slice(0, 16);
+		setSelectedStartTime(localDatetimeString);
+	}, []);
+
+	// Fetch rack availability when component mounts
 	useEffect(() => {
 		if (rack?._id) {
 			fetchRackAvailability();
 		}
-	}, [rack?._id, selectedDate]);
+	}, [rack?._id]);
 
 	const fetchRackAvailability = async () => {
 		try {
@@ -188,47 +201,35 @@ export default function RackHero({ rack }) {
 		}
 	};
 
-	const isTimeSlotBooked = (hour) => {
-		// Filter bookings for the selected date
-		const selectedDateStart = new Date(selectedDate);
-		selectedDateStart.setHours(0, 0, 0, 0);
-		const selectedDateEnd = new Date(selectedDate);
-		selectedDateEnd.setHours(23, 59, 59, 999);
+	// Check if selected time conflicts with existing bookings
+	const hasTimeConflict = () => {
+		if (!selectedStartTime) return false;
+
+		const requestedStart = new Date(selectedStartTime);
+		const requestedEnd = new Date(requestedStart);
+		requestedEnd.setHours(requestedStart.getHours() + selectedDuration);
 
 		return rackBookings.some((booking) => {
 			const bookingStart = new Date(booking.startTime);
 			const bookingEnd = new Date(booking.endTime);
 
-			// Check if booking overlaps with the selected date
-			if (bookingStart > selectedDateEnd || bookingEnd < selectedDateStart) {
-				return false;
-			}
-
-			// Get the hour range for this booking on the selected date
-			const startHourOnDate = bookingStart.getDate() === selectedDateStart.getDate()
-				? bookingStart.getHours()
-				: 0;
-			const endHourOnDate = bookingEnd.getDate() === selectedDateStart.getDate()
-				? bookingEnd.getHours()
-				: 24;
-
-			return hour >= startHourOnDate && hour < endHourOnDate;
+			// Check if there's any overlap
+			return (
+				(requestedStart >= bookingStart && requestedStart < bookingEnd) ||
+				(requestedEnd > bookingStart && requestedEnd <= bookingEnd) ||
+				(requestedStart <= bookingStart && requestedEnd >= bookingEnd)
+			);
 		});
 	};
 
-	const canBookDuration = (startHour, duration) => {
-		for (let i = 0; i < duration; i++) {
-			const checkHour = startHour + i;
-			if (checkHour >= 24) return false; // Can't book past midnight
-			if (isTimeSlotBooked(checkHour)) return false;
-		}
-		return true;
+	// Get minimum datetime string for the input (current time)
+	const getMinDateTime = () => {
+		const now = new Date();
+		return now.toISOString().slice(0, 16);
 	};
 
 	const status = getStatusDisplay();
 	const StatusIcon = status.icon;
-	const availableDates = getAvailableDates();
-	const timeSlots = generateTimeSlots();
 
 	const handleBooking = async () => {
 		if (!isAuthenticated) {
@@ -236,7 +237,21 @@ export default function RackHero({ rack }) {
 			return;
 		}
 
-		if (selectedTime === null) {
+		if (!selectedStartTime) {
+			alert('Please select a start time for your booking.');
+			return;
+		}
+
+		// Check for time conflicts
+		if (hasTimeConflict()) {
+			alert('The selected time conflicts with an existing booking. Please choose a different time.');
+			return;
+		}
+
+		// Check if start time is in the past
+		const startDateTime = new Date(selectedStartTime);
+		if (startDateTime < new Date()) {
+			alert('Start time must be in the future. Please select a valid time.');
 			return;
 		}
 
@@ -249,9 +264,6 @@ export default function RackHero({ rack }) {
 
 		setBookingInProgress(true);
 		try {
-			const startDateTime = new Date(selectedDate);
-			startDateTime.setHours(selectedTime, 0, 0, 0);
-
 			const endDateTime = new Date(startDateTime);
 			endDateTime.setHours(startDateTime.getHours() + selectedDuration);
 
@@ -266,7 +278,7 @@ export default function RackHero({ rack }) {
 			const response = await api.post('/bookings', bookingData);
 
 			if (response.data.success) {
-				alert('Booking created successfully!');
+				alert(`Booking created successfully! Start time: ${formatTimeWithTimezone(startDateTime)} (Your timezone: ${userTimezone})`);
 				router.push('/dashboard');
 			} else {
 				alert('Failed to create booking. Please try again.');
@@ -360,6 +372,22 @@ export default function RackHero({ rack }) {
 							<div className='mt-6 max-w-2xl prose prose-gray prose-sm mb-8'>
 								<ReactMarkdown>{rackData.description}</ReactMarkdown>
 							</div>
+
+							{/* Rack Topology Diagram */}
+							{rack?.topologyDiagram && (
+								<div className='mb-8'>
+									<h3 className='text-base font-semibold text-gray-900 mb-3'>
+										Rack Topology Diagram
+									</h3>
+									<div className='overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200'>
+										<img
+											src={rack.topologyDiagram}
+											alt={`${rackData.title} Topology Diagram`}
+											className='w-full h-auto object-contain'
+										/>
+									</div>
+								</div>
+							)}
 
 							{/* Quick specs - using cleaner card style */}
 							<div className='mb-8'>
@@ -498,75 +526,28 @@ export default function RackHero({ rack }) {
 										</div>
 									</div>
 
-									{/* Calendar section */}
+									{/* Start Time Selection */}
 									<div className='mb-6'>
 										<h4 className='text-sm font-medium text-gray-900 mb-3'>
-											Select Date
+											Select Start Time
 										</h4>
-										<div className='grid grid-cols-7 gap-px rounded-md bg-gray-200 text-center text-xs shadow-xs ring-1 ring-gray-200'>
-											{availableDates.map((dateInfo, index) => (
-												<button
-													key={dateInfo.date}
-													onClick={() => setSelectedDate(dateInfo.date)}
-													className={classNames(
-														'p-2 focus:z-10',
-														selectedDate === dateInfo.date
-															? 'bg-indigo-600 text-white font-semibold'
-															: 'bg-white text-gray-900 hover:bg-gray-100',
-														dateInfo.isToday && selectedDate !== dateInfo.date
-															? 'text-indigo-600 font-semibold'
-															: '',
-														index === 0 && 'rounded-l-md',
-														index === availableDates.length - 1 &&
-															'rounded-r-md'
-													)}>
-													<div className='font-medium'>{dateInfo.weekday}</div>
-													<div className='mt-1'>{dateInfo.day}</div>
-												</button>
-											))}
-										</div>
-									</div>
-
-									{/* Time slots */}
-									<div className='mb-6'>
-										<h4 className='text-sm font-medium text-gray-900 mb-3'>
-											Available Time Slots
-										</h4>
-										<div className='max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2'>
-											<div className='grid grid-cols-6 gap-1'>
-												{timeSlots.map((slot) => {
-													const isBooked = isTimeSlotBooked(slot.hour);
-													const canSelect =
-														!isBooked &&
-														canBookDuration(slot.hour, selectedDuration);
-
-													return (
-														<button
-															key={slot.hour}
-															onClick={() =>
-																canSelect && setSelectedTime(slot.hour)
-															}
-															disabled={isBooked || !canSelect}
-															className={classNames(
-																'p-2 text-xs rounded border transition-all',
-																isBooked
-																	? 'bg-red-50 border-red-200 text-red-600 cursor-not-allowed'
-																	: selectedTime === slot.hour
-																	? 'border-indigo-600 bg-indigo-50 text-indigo-900'
-																	: canSelect
-																	? 'border-gray-200 hover:border-gray-300 text-gray-700'
-																	: 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
-															)}>
-															<div className='font-medium'>{slot.time12}</div>
-															{isBooked && (
-																<div className='text-xs text-red-500 mt-1'>
-																	Booked
-																</div>
-															)}
-														</button>
-													);
-												})}
+										<div className='space-y-2'>
+											<input
+												type="datetime-local"
+												value={selectedStartTime}
+												onChange={(e) => setSelectedStartTime(e.target.value)}
+												min={getMinDateTime()}
+												className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 text-gray-900'
+											/>
+											<div className='flex items-center gap-2 text-xs text-gray-500'>
+												<ClockIcon className='h-4 w-4' />
+												<span>Your timezone: {userTimezone}</span>
 											</div>
+											{hasTimeConflict() && (
+												<div className='text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2'>
+													⚠ This time conflicts with an existing booking. Please choose a different time.
+												</div>
+											)}
 										</div>
 									</div>
 
@@ -616,22 +597,13 @@ export default function RackHero({ rack }) {
 									</div>
 
 									{/* Selection summary */}
-									{selectedTime !== null && (
+									{selectedStartTime && !hasTimeConflict() && (
 										<div className='mb-6 p-3 bg-green-50 border border-green-200 rounded-lg'>
 											<div className='text-sm font-medium text-green-900'>
 												Booking Summary
 											</div>
 											<div className='text-sm text-green-700 mt-1'>
-												{
-													availableDates.find((d) => d.date === selectedDate)
-														?.weekday
-												}
-												,{' '}
-												{
-													availableDates.find((d) => d.date === selectedDate)
-														?.day
-												}{' '}
-												• {timeSlots[selectedTime].time12} • {selectedDuration}{' '}
+												{formatTimeWithTimezone(new Date(selectedStartTime))} • {selectedDuration}{' '}
 												hour{selectedDuration > 1 ? 's' : ''}
 											</div>
 											<div className='text-xs text-green-600 mt-1'>
@@ -643,17 +615,19 @@ export default function RackHero({ rack }) {
 									{/* Book button */}
 									<button
 											onClick={handleBooking}
-										disabled={!isAuthenticated || selectedTime === null || bookingInProgress}
+										disabled={!isAuthenticated || !selectedStartTime || hasTimeConflict() || bookingInProgress}
 										className={classNames(
 											'w-full rounded-lg px-4 py-3 text-base font-semibold shadow-sm transition-all',
-											!isAuthenticated || selectedTime === null || bookingInProgress
+											!isAuthenticated || !selectedStartTime || hasTimeConflict() || bookingInProgress
 												? 'bg-gray-100 text-gray-400 cursor-not-allowed'
 												: 'bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 										)}>
 										{bookingInProgress ? 'Creating Booking...' : !isAuthenticated
 											? 'Login Required to Book'
-											: selectedTime === null
-											? 'Select Time Slot to Book'
+											: !selectedStartTime
+											? 'Select Start Time to Book'
+											: hasTimeConflict()
+											? 'Time Conflict - Choose Another Time'
 											: 'Book This Rack'}
 									</button>
 

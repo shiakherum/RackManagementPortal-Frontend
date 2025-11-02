@@ -63,9 +63,10 @@ function DashboardContent() {
 
 	const formatDateTime = (dateString) => {
 		const date = new Date(dateString);
-		return date.toLocaleString('en-IN', {
+		return date.toLocaleString('en-US', {
 			dateStyle: 'medium',
 			timeStyle: 'short',
+			timeZoneName: 'short',
 		});
 	};
 
@@ -245,7 +246,7 @@ function DashboardContent() {
 						<h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 							<button
-								onClick={() => router.push('/#token-packs')}
+								onClick={() => router.push('/token-packs')}
 								className="p-4 border border-gray-300 rounded-lg hover:border-indigo-500 hover:shadow-md transition-all"
 							>
 								<div className="text-center">
