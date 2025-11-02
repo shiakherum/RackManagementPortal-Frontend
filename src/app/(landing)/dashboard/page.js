@@ -12,6 +12,7 @@ function DashboardContent() {
 	const refresh = searchParams.get('refresh');
 	const [bookings, setBookings] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [feedbackStatus, setFeedbackStatus] = useState({});
 
 	useEffect(() => {
 		if (!authLoading && !isAuthenticated) {
@@ -34,6 +35,27 @@ function DashboardContent() {
 			const response = await api.get('/bookings');
 			if (response.data.success) {
 				setBookings(response.data.data);
+
+				// Check feedback status for completed bookings
+				const completedBookings = response.data.data.filter(b => b.status === 'completed');
+				const feedbackChecks = await Promise.all(
+					completedBookings.map(async (booking) => {
+						try {
+							const feedbackResponse = await api.get(`/feedbacks/booking/${booking._id}`);
+							return { bookingId: booking._id, hasFeedback: feedbackResponse.data.success && feedbackResponse.data.data !== null };
+						} catch (error) {
+							// If 404, feedback doesn't exist
+							return { bookingId: booking._id, hasFeedback: false };
+						}
+					})
+				);
+
+				// Convert array to object for easy lookup
+				const feedbackStatusMap = {};
+				feedbackChecks.forEach(({ bookingId, hasFeedback }) => {
+					feedbackStatusMap[bookingId] = hasFeedback;
+				});
+				setFeedbackStatus(feedbackStatusMap);
 			}
 		} catch (error) {
 			console.error('Error fetching bookings:', error);
@@ -238,13 +260,18 @@ function DashboardContent() {
 															Cancel
 														</button>
 													)}
-													{booking.status === 'completed' && (
+													{booking.status === 'completed' && !feedbackStatus[booking._id] && (
 														<button
 															onClick={() => router.push(`/feedback?bookingId=${booking._id}`)}
 															className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
 														>
 															📝 Give Feedback
 														</button>
+													)}
+													{booking.status === 'completed' && feedbackStatus[booking._id] && (
+														<span className="inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+															✓ Feedback Submitted
+														</span>
 													)}
 												</div>
 											</div>
