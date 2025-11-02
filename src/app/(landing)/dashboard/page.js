@@ -220,11 +220,16 @@ function DashboardContent() {
 															onClick={async () => {
 																if (confirm('Are you sure you want to cancel this booking?')) {
 																	try {
-																		await api.patch(`/bookings/${booking._id}/cancel`);
-																		fetchBookings(); // Refresh the list
+																		const response = await api.patch(`/bookings/${booking._id}/cancel`);
+																		if (response.data.success) {
+																			const refundAmount = response.data.data.refundedTokens;
+																			alert(`Booking cancelled successfully! ${refundAmount} tokens have been refunded to your account.`);
+																			// Refresh both bookings and user data
+																			await Promise.all([fetchBookings(), refreshUser()]);
+																		}
 																	} catch (error) {
 																		console.error('Error cancelling booking:', error);
-																		alert('Failed to cancel booking');
+																		alert(error.response?.data?.message || 'Failed to cancel booking. Please try again.');
 																	}
 																}
 															}}

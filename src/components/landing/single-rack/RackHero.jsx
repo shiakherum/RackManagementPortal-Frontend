@@ -563,6 +563,44 @@ export default function RackHero({ rack }) {
 										</div>
 									</div>
 
+									{/* Currently Booked Times */}
+									{rackBookings.length > 0 && (
+										<div className='mb-6'>
+											<h4 className='text-sm font-medium text-gray-900 mb-3'>
+												Currently Booked Times
+											</h4>
+											<div className='max-h-40 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-3 bg-gray-50'>
+												{rackBookings.map((booking, index) => {
+													const start = new Date(booking.startTime);
+													const end = new Date(booking.endTime);
+													const duration = Math.abs(end - start) / 36e5; // hours
+													return (
+														<div key={index} className='flex items-center justify-between text-xs bg-white border border-red-200 rounded px-3 py-2'>
+															<div className='flex items-center gap-2'>
+																<div className='w-2 h-2 bg-red-500 rounded-full'></div>
+																<span className='text-gray-700'>
+																	{start.toLocaleString('en-US', {
+																		month: 'short',
+																		day: 'numeric',
+																		hour: 'numeric',
+																		minute: '2-digit',
+																		timeZoneName: 'short'
+																	})}
+																</span>
+															</div>
+															<span className='text-gray-500'>
+																{duration}h
+															</span>
+														</div>
+													);
+												})}
+											</div>
+											<div className='text-xs text-gray-500 mt-2'>
+												Showing all confirmed bookings in the next 7 days
+											</div>
+										</div>
+									)}
+
 									{/* Duration selector */}
 									<div className='mb-6'>
 										<h4 className='text-sm font-medium text-gray-900 mb-3'>
