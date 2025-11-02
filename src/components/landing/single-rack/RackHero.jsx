@@ -80,6 +80,9 @@ export default function RackHero({ rack }) {
 	const [bookingInProgress, setBookingInProgress] = useState(false);
 	const [rackBookings, setRackBookings] = useState([]);
 
+	// INR to USD conversion rate (approximate)
+	const INR_TO_USD_RATE = 0.012;
+
 	// Process rack data with fallbacks for static pages
 	const rackData = rack ? {
 		id: rack.deviceId,
@@ -521,7 +524,10 @@ export default function RackHero({ rack }) {
 											<strong className='font-medium text-indigo-700'>
 												₹{(rackData.tokenRate * 4).toFixed(2)}
 											</strong>{' '}
-											per hour
+											<span className='text-gray-400'>
+												(${((rackData.tokenRate * 4) * INR_TO_USD_RATE).toFixed(2)} USD)
+											</span>
+											{' '}per hour
 										</p>
 									</div>
 
