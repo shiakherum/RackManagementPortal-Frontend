@@ -107,7 +107,8 @@ function VNCViewerContent() {
 				<iframe
 					src={vncUrl}
 					className="absolute inset-0 w-full h-full border-0"
-					allow="clipboard-read; clipboard-write"
+					allow="clipboard-read; clipboard-write; fullscreen"
+					allowFullScreen
 					title="VNC Viewer"
 				/>
 			</div>
