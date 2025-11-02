@@ -287,7 +287,7 @@ function DashboardContent() {
 				<div>
 					<div className="bg-white shadow rounded-lg p-6">
 						<h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 							<button
 								onClick={() => router.push('/token-packs')}
 								className="p-4 border border-gray-300 rounded-lg hover:border-indigo-500 hover:shadow-md transition-all"
@@ -310,6 +310,18 @@ function DashboardContent() {
 									</div>
 									<p className="text-sm font-medium text-gray-900">Book Rack</p>
 									<p className="text-xs text-gray-500">Book available racks</p>
+								</div>
+							</button>
+							<button
+								onClick={() => router.push('/token-history')}
+								className="p-4 border border-gray-300 rounded-lg hover:border-indigo-500 hover:shadow-md transition-all"
+							>
+								<div className="text-center">
+									<div className="h-8 w-8 bg-purple-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+										<span className="text-purple-600">📊</span>
+									</div>
+									<p className="text-sm font-medium text-gray-900">Token History</p>
+									<p className="text-xs text-gray-500">View balance sheet</p>
 								</div>
 							</button>
 							<button
