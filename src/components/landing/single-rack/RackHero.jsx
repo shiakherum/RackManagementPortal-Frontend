@@ -51,15 +51,23 @@ const formatTimeWithTimezone = (date) => {
 	});
 };
 
-// Get current time rounded to next 5 minutes
-const getRoundedCurrentTime = () => {
+// Get current time rounded to next 5 minutes in local timezone format for datetime-local input
+const getRoundedCurrentTimeLocal = () => {
 	const now = new Date();
 	const minutes = now.getMinutes();
 	const roundedMinutes = Math.ceil(minutes / 5) * 5;
 	now.setMinutes(roundedMinutes);
 	now.setSeconds(0);
 	now.setMilliseconds(0);
-	return now;
+
+	// Convert to local datetime string format (YYYY-MM-DDTHH:mm)
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0');
+	const day = String(now.getDate()).padStart(2, '0');
+	const hours = String(now.getHours()).padStart(2, '0');
+	const mins = String(now.getMinutes()).padStart(2, '0');
+
+	return `${year}-${month}-${day}T${hours}:${mins}`;
 };
 
 function classNames(...classes) {
@@ -127,10 +135,9 @@ export default function RackHero({ rack }) {
 	const [selectedDuration, setSelectedDuration] = useState(1);
 	const [userTimezone] = useState(getUserTimezone());
 
-	// Initialize with current time rounded to next 5 minutes
+	// Initialize with current time rounded to next 5 minutes in user's local timezone
 	useEffect(() => {
-		const roundedTime = getRoundedCurrentTime();
-		const localDatetimeString = roundedTime.toISOString().slice(0, 16);
+		const localDatetimeString = getRoundedCurrentTimeLocal();
 		setSelectedStartTime(localDatetimeString);
 	}, []);
 
@@ -222,10 +229,15 @@ export default function RackHero({ rack }) {
 		});
 	};
 
-	// Get minimum datetime string for the input (current time)
+	// Get minimum datetime string for the input (current time in local timezone)
 	const getMinDateTime = () => {
 		const now = new Date();
-		return now.toISOString().slice(0, 16);
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		const hours = String(now.getHours()).padStart(2, '0');
+		const mins = String(now.getMinutes()).padStart(2, '0');
+		return `${year}-${month}-${day}T${hours}:${mins}`;
 	};
 
 	const status = getStatusDisplay();
