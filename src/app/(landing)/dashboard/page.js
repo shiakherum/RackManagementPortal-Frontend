@@ -64,8 +64,11 @@ function DashboardContent() {
 	const formatDateTime = (dateString) => {
 		const date = new Date(dateString);
 		return date.toLocaleString('en-US', {
-			dateStyle: 'medium',
-			timeStyle: 'short',
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+			hour: 'numeric',
+			minute: '2-digit',
 			timeZoneName: 'short',
 		});
 	};
