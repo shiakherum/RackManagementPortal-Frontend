@@ -541,7 +541,7 @@ export default function RackHero({ rack }) {
 									{/* Start Time Selection */}
 									<div className='mb-6'>
 										<h4 className='text-sm font-medium text-gray-900 mb-3'>
-											Select Start Time
+											Select Start Time <span className='text-gray-500 font-normal'>(in your local time)</span>
 										</h4>
 										<div className='space-y-2'>
 											<input
@@ -551,9 +551,11 @@ export default function RackHero({ rack }) {
 												min={getMinDateTime()}
 												className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 text-gray-900'
 											/>
-											<div className='flex items-center gap-2 text-xs text-gray-500'>
-												<ClockIcon className='h-4 w-4' />
-												<span>Your timezone: {userTimezone}</span>
+											<div className='flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md'>
+												<ClockIcon className='h-4 w-4 text-blue-600 flex-shrink-0' />
+												<span className='text-xs text-blue-800'>
+													<strong>Your timezone:</strong> {userTimezone}. Your session will start at the exact time you select, regardless of where other users are located.
+												</span>
 											</div>
 											{hasTimeConflict() && (
 												<div className='text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2'>
@@ -596,7 +598,7 @@ export default function RackHero({ rack }) {
 												})}
 											</div>
 											<div className='text-xs text-gray-500 mt-2'>
-												Showing all confirmed bookings in the next 7 days
+												Showing all confirmed bookings in the next 7 days (times displayed in your local timezone)
 											</div>
 										</div>
 									)}
