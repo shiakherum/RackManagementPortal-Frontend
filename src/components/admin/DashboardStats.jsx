@@ -10,27 +10,27 @@ import {
 } from '@/components/ui/card';
 import {
 	BookCopy,
-	IndianRupee,
+	DollarSign,
 	Server,
 	TrendingUp,
 	Users2,
 } from 'lucide-react';
 
 export default function DashboardStats({ stats }) {
-	// Convert totalRevenue from paise to rupees for display
-	const totalRevenueInRupees = (stats.totalRevenue / 100).toLocaleString(
-		'en-IN',
+	// Convert totalRevenue from cents to dollars for display
+	const totalRevenueInDollars = (stats.totalRevenue / 100).toLocaleString(
+		'en-US',
 		{
 			style: 'currency',
-			currency: 'INR',
+			currency: 'USD',
 		}
 	);
 
 	const cardData = [
 		{
 			title: 'Total Revenue',
-			value: totalRevenueInRupees,
-			icon: IndianRupee,
+			value: totalRevenueInDollars,
+			icon: DollarSign,
 			description: 'Total earnings from all token pack sales',
 			trend: '+12.5%',
 			trendUp: true,

@@ -13,9 +13,6 @@ export default function TokenPacks() {
 	const [loading, setLoading] = useState(true);
 	const [purchasing, setPurchasing] = useState(null);
 
-	// INR to USD conversion rate (approximate)
-	const INR_TO_USD_RATE = 0.012;
-
 	useEffect(() => {
 		fetchTokenPacks();
 	}, []);
@@ -149,10 +146,7 @@ export default function TokenPacks() {
 											<div className='text-sm font-medium text-gray-600'>
 												<p>Tokens</p>
 												<p className='mt-0.5 font-bold text-gray-900'>
-													₹{(pack.price / 100).toFixed(2)}
-												</p>
-												<p className='text-xs text-gray-500'>
-													≈ ${((pack.price / 100) * INR_TO_USD_RATE).toFixed(2)} USD
+													${(pack.price / 100).toFixed(2)} USD
 												</p>
 											</div>
 										</div>

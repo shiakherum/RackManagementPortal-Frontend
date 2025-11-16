@@ -80,9 +80,6 @@ export default function RackHero({ rack }) {
 	const [bookingInProgress, setBookingInProgress] = useState(false);
 	const [rackBookings, setRackBookings] = useState([]);
 
-	// INR to USD conversion rate (approximate)
-	const INR_TO_USD_RATE = 0.012;
-
 	// Process rack data with fallbacks for static pages
 	const rackData = rack ? {
 		id: rack.deviceId,
@@ -135,7 +132,7 @@ export default function RackHero({ rack }) {
 		rackData.availableAciVersions[0]
 	);
 	const [selectedStartTime, setSelectedStartTime] = useState('');
-	const [selectedDuration, setSelectedDuration] = useState(1);
+	const [selectedDuration, setSelectedDuration] = useState(4);
 	const [userTimezone] = useState(getUserTimezone());
 
 	// Initialize with current time rounded to next 5 minutes in user's local timezone
@@ -522,11 +519,8 @@ export default function RackHero({ rack }) {
 										<p className='text-sm text-gray-500 mt-1'>
 											≈{' '}
 											<strong className='font-medium text-indigo-700'>
-												₹{(rackData.tokenRate * 4).toFixed(2)}
-											</strong>{' '}
-											<span className='text-gray-400'>
-												(${((rackData.tokenRate * 4) * INR_TO_USD_RATE).toFixed(2)} USD)
-											</span>
+												${(rackData.tokenRate * 4).toFixed(2)} USD
+											</strong>
 											{' '}per hour
 										</p>
 									</div>
@@ -613,7 +607,7 @@ export default function RackHero({ rack }) {
 											Duration (Hours)
 										</h4>
 										<div className='flex gap-px bg-gray-200 shadow-xs ring-1 ring-gray-200 rounded-md overflow-hidden'>
-											{[1, 2, 3, 4, 6, 8].map((hours) => (
+											{[4, 8].map((hours) => (
 												<button
 													key={hours}
 													onClick={() => setSelectedDuration(hours)}

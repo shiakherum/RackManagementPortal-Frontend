@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
-import { AlertCircle, IndianRupee, Info, Loader2, Package } from 'lucide-react';
+import { AlertCircle, DollarSign, Info, Loader2, Package } from 'lucide-react';
 
 // Zod schema for validation
 const formSchema = z.object({
@@ -40,7 +40,7 @@ const formSchema = z.object({
 		.number()
 		.int()
 		.positive({ message: 'Price must be a positive number.' }),
-	currency: z.string().default('INR'),
+	currency: z.string().default('USD'),
 	isActive: z.boolean().default(true),
 });
 
@@ -56,8 +56,8 @@ export default function AddTokenPackForm() {
 			name: '',
 			description: '',
 			tokensGranted: 100,
-			price: 1000, // Default to 10.00 INR
-			currency: 'INR',
+			price: 1000, // Default to 10.00 USD
+			currency: 'USD',
 			isActive: true,
 		},
 	});
@@ -178,10 +178,10 @@ export default function AddTokenPackForm() {
 														{...field}
 													/>
 												</FormControl>
-												<IndianRupee className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+												<DollarSign className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
 											</div>
 											<FormDescription>
-												e.g., enter 1000 for ₹10.00.
+												e.g., enter 1000 for $10.00 USD.
 											</FormDescription>
 											<FormMessage />
 										</FormItem>

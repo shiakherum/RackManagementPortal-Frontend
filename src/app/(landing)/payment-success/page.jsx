@@ -70,7 +70,7 @@ function PaymentSuccessContent() {
 								<div className='flex justify-between items-center'>
 									<span className='font-medium'>Amount Paid:</span>
 									<span className='text-gray-900 font-semibold'>
-										₹{(parseInt(details.amount) / 100).toFixed(2)}
+										${(parseInt(details.amount) / 100).toFixed(2)} USD
 									</span>
 								</div>
 							</div>

@@ -13,9 +13,6 @@ export default function TokenPacksPage() {
 	const [loading, setLoading] = useState(true);
 	const [purchasing, setPurchasing] = useState(null);
 
-	// INR to USD conversion rate (approximate)
-	const INR_TO_USD_RATE = 0.012;
-
 	useEffect(() => {
 		fetchTokenPacks();
 	}, []);
@@ -183,20 +180,16 @@ export default function TokenPacksPage() {
 
 									{/* Price */}
 									<div className="text-center mb-6">
-										<div className="space-y-1">
-											<div className="inline-flex items-baseline">
-												<span className="text-3xl font-bold text-gray-900">
-													₹{(pack.price / 100).toFixed(2)}
-												</span>
-											</div>
-											<div className="inline-flex items-baseline">
-												<span className="text-xl font-semibold text-gray-600">
-													≈ ${((pack.price / 100) * INR_TO_USD_RATE).toFixed(2)} USD
-												</span>
-											</div>
+										<div className="inline-flex items-baseline">
+											<span className="text-3xl font-bold text-gray-900">
+												${(pack.price / 100).toFixed(2)}
+											</span>
+											<span className="ml-2 text-xl font-semibold text-gray-600">
+												USD
+											</span>
 										</div>
 										<p className="mt-2 text-sm text-gray-500">
-											₹{((pack.price / 100) / pack.tokensGranted).toFixed(2)} (${(((pack.price / 100) * INR_TO_USD_RATE) / pack.tokensGranted).toFixed(2)}) per token
+											${((pack.price / 100) / pack.tokensGranted).toFixed(2)} per token
 										</p>
 									</div>
 
