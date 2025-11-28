@@ -81,7 +81,7 @@ export default function Racks() {
 			tokens: rack.tokenCostPerHour || 0,
 			stats: {
 				nodes: rack.specifications?.length > 0 ? `${rack.specifications.length} Specs` : 'Available',
-				tokenTxt: rack.tokenCostPerHour ? `${rack.tokenCostPerHour} Tokens / h` : 'Available'
+				tokenTxt: rack.tokenCostPerHour ? `${rack.tokenCostPerHour} Tokens / session` : 'Available'
 			},
 			specs: displayFeatures,
 			hasMoreFeatures,
@@ -179,7 +179,7 @@ export default function Racks() {
 												<div className='text-right'>
 													<p className='text-xs font-medium text-gray-500'>Price</p>
 													<p className='text-lg tracking-tight font-semibold text-emerald-600'>
-														{displayRack.stats.tokenTxt}
+														{displayRack.tokens} Tokens / <span className='text-sm'>session</span>
 													</p>
 												</div>
 											</div>

@@ -67,11 +67,11 @@ import { useDebounce } from '@/hooks/use-debounce';
 import api from '@/lib/api';
 
 // Helper to format currency
-const formatCurrency = (amount, currency = 'INR') => {
-	return new Intl.NumberFormat('en-IN', {
+const formatCurrency = (amount, currency = 'USD') => {
+	return new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: currency,
-	}).format(amount / 100); // Assuming amount is in paise
+	}).format(amount / 100); // Assuming amount is in cents
 };
 
 export default function TokenPacksDataTable() {
